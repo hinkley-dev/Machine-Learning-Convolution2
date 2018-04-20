@@ -1,5 +1,5 @@
-#ifndef LAYERTANH_H
-#define LAYERTANH_H
+#ifndef LAYERSINUSOID_H
+#define LAYERSINUSOID_H
 
 #include "vec.h"
 #include "matrix.h"
@@ -8,18 +8,18 @@
 
 using namespace std;
 
-class LayerTanh : public Layer
+class LayerSinusoid : public Layer
 {
 
 protected:
   size_t m_inputs;
-
+  Vec in;
 
 
 public:
 
-	LayerTanh(size_t inputs);
-	~LayerTanh();
+	LayerSinusoid(size_t inputs);
+	~LayerSinusoid();
 
 	virtual void activate(const Vec& weights,const Vec& x);
 	virtual void backprop(const Vec& weights, Vec& prevBlame);
@@ -27,7 +27,8 @@ public:
 
 	virtual size_t getInputCount();
   virtual bool isConv() { return false; }
-  virtual bool isSin() { return false; }
+    virtual bool isSin() { return true; }
+
 };
 
 #endif

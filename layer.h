@@ -22,6 +22,7 @@ public:
 	void setBlame(const Vec& _blame);
 	size_t getWeightCount();
 	static size_t countTensorElements(const Vec& dims);
+	
 
 
 	virtual ~Layer();
@@ -30,6 +31,7 @@ public:
 	virtual void backprop(const Vec& weights, Vec& prevBlame) = 0;
 	virtual void update_gradient(const Vec& x, Vec& gradient) = 0;
 	virtual bool isConv() = 0;
+	virtual bool isSin() = 0;
 
 	virtual size_t getInputCount() = 0;
 

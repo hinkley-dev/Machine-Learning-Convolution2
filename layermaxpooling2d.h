@@ -32,6 +32,7 @@ public:
 
 	virtual size_t getInputCount();
   virtual bool isConv() { return false; }
+    virtual bool isSin() { return false; }
 
 };
 

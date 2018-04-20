@@ -25,6 +25,7 @@ public:
 	virtual void update_gradient(const Vec& x, Vec& gradient);
   virtual size_t getInputCount();
   virtual bool isConv() { return false; }
+    virtual bool isSin() { return false; }
 };
 
 

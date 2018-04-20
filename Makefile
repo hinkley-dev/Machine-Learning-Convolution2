@@ -54,6 +54,7 @@ CPP_FILES =\
 	layerconv.cpp\
 	layerleakyrect.cpp\
 	layermaxpooling2d.cpp\
+	layersinusoid.cpp\
 	neuralnet.cpp\
 	nomcat.cpp\
 	imputer.cpp\

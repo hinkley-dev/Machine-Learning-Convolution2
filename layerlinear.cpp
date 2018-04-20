@@ -32,6 +32,10 @@ void LayerLinear::activate(const Vec& weights,const Vec& x)
   for(size_t i = 0; i < m_outputs; ++i)
   {
     VecWrapper weightsRow(*(Vec*)&weights, matrixIndex, m_inputs);
+    // cout << "weights row: " << endl;
+    // weightsRow.print();
+    // cout << endl;
+    // cout << "b[i]: " << b[i] << endl;
     activation[i] = x.dotProduct(weightsRow) + b[i];
     matrixIndex +=weightsRow.size();
   }
@@ -64,7 +68,7 @@ void LayerLinear::backprop(const Vec& weights, Vec& prevBlame)
   for(size_t i = 0; i < prevBlame.size(); ++i)
   {
     double val = blame.dotProduct(M_transposed->row(i));
-    prevBlame[i] =  val;
+    prevBlame[i] +=  val;
   }
 
   delete M_transposed;

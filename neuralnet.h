@@ -7,6 +7,7 @@
 #include "layerlinear.h"
 #include "layertanh.h"
 #include "layerconv.h"
+#include "layersinusoid.h"
 #include <vector>
 #include "supervised.h"
 #include "rand.h"
@@ -29,6 +30,8 @@ private:
   Rand random;
   Matrix testingLabels;
   Matrix testingFeatures;
+  size_t reg; //0==no reg, 1== l1, 2 ==l2
+  const double pi = 3.1415926535898;
 
 
 public:
@@ -51,6 +54,7 @@ public:
   size_t countMisclassifications(const Matrix& features, const Matrix& labels);
 
   void centralFiniteDifferencing(Vec& x, Vec& target);
+  void setReg(size_t);
 
 
   size_t effective_batch_size(double momentum);

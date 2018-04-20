@@ -126,6 +126,9 @@ const Vec& NeuralNet::predict(const Vec& in)
 
     layerInputs.copy(layers[i]->getActivation());
     startWeight += layers[i]->getWeightCount();
+   // cout << "Layer " << i << " activation: " << endl;
+    // layers[i]->getActivation().print();
+    // cout << endl;
   }
 
   return layers[layers.size() -1]->getActivation();
@@ -142,7 +145,9 @@ void NeuralNet::backprop(const Vec& targetVals)
     initialBlame[i] = targetVals[i] - finalActivation[i];
   }
 
+
   layers[layers.size() -1]->setBlame(initialBlame);
+
   size_t startWeight = weights.size();
   Vec prevBlame(initialBlame);
 
@@ -150,13 +155,15 @@ void NeuralNet::backprop(const Vec& targetVals)
   {
 
     //build the weights
-    startWeight -= layers[i]->getWeightCount();
-    VecWrapper layerWeights(weights, startWeight,layers[i]->getWeightCount());
 
     layers[i]->setBlame(prevBlame);
     prevBlame.resize(layers[i]->getInputCount());
     prevBlame.fill(0.0);
+
+    startWeight -= layers[i]->getWeightCount();
+    VecWrapper layerWeights(weights, startWeight,layers[i]->getWeightCount());
     layers[i]->backprop(layerWeights, prevBlame);
+
   }
   layers[0]->setBlame(prevBlame);
 
@@ -169,6 +176,7 @@ void NeuralNet::update_gradient(const Vec& x)
   if(&x == nullptr) throw Ex("input to update gradient is null");
   if(x.size() == 0) throw Ex("input is not the right size");
   Vec in(x);
+  // double lambda = 0.01;
   size_t startGradient = 0;
 
   for(size_t i = 0; i < layers.size(); ++i)
@@ -180,7 +188,9 @@ void NeuralNet::update_gradient(const Vec& x)
     //copying over the gradient
     for(size_t j = startGradient, k = 0; k < layerGradient.size(); ++j, ++k)
     {
+
       gradient[j] = layerGradient[k];
+  //if(i == 2) gradient[j] +=lambda*abs(weights[j]);
     }
 
     in.copy(layers[i]->getActivation());
@@ -197,15 +207,48 @@ void NeuralNet::init_weights()
 
   for(size_t layerIndex = 0 ; layerIndex < layers.size(); ++layerIndex)
   {
+    size_t weightItr = 0;
    for(size_t i = startWeight; i < startWeight + layers[layerIndex]->getWeightCount(); ++i)
     {
       if(i >= weights.size()) throw Ex("Math error in init weights");
       if( layers[layerIndex]->getInputCount() <= 0) throw Ex("Math error in init weights (trying to divide by 0)");
-      if(layers[layerIndex]->isConv())
+      // if(layers[layerIndex]->isConv())
+      // {
+      //   weights[i] = random.normal() / (double)layers[layerIndex]->getInputCount();
+      // }
+
+      if(layerIndex == 0)
       {
-        weights[i] = random.normal() / (double)layers[layerIndex]->getInputCount();
-      }
-      weights[i] = max(0.03, 1.0 / layers[layerIndex]->getInputCount()) * random.normal();
+
+       // weights[i] = max(0.03, 1.0 / layers[layerIndex]->getInputCount()) * random.normal();
+       if(i < (layers[layerIndex]->getWeightCount()) / 2 -1)
+       {
+         if(i < (layers[layerIndex]->getWeightCount() / 2 -1) /2)
+            weights[i] = pi;
+         else
+            weights[i] = pi/2.0;
+       }
+       else if(i == (layers[layerIndex]->getWeightCount()) / 2 -1)
+          weights[i] = 0;
+       else
+       {
+         weightItr++;
+         weights[i] = weightItr*2*pi;
+         if(weightItr == (layers[layerIndex]->getWeightCount() / 2 -1) /2)
+            weightItr = 0;
+       }
+
+     }
+     else
+     {
+       if(i == startWeight) weights[i] = 0.0;
+        else weights[i] = 0.01;
+     }
+
+    }
+    if(layerIndex == 0)
+    {
+      weights[layers[layerIndex]->getWeightCount()-1] = 0.01;
     }
     startWeight += layers[layerIndex]->getWeightCount();
 
@@ -220,9 +263,28 @@ void NeuralNet::init_weights()
 
 }
 
+void NeuralNet::setReg(size_t r)
+{
+  reg = r;
+}
+
 void NeuralNet::refine_weights(double learning_rate)
 {
   weights.addScaled(learning_rate, gradient);
+  if(reg ==1)
+  {
+    VecWrapper finalLayerWeights(weights, weights.size() - layers[layers.size() -1]->getWeightCount(),layers[layers.size() -1]->getWeightCount());
+    double lambda = 0.0001;  //fro L2 0.001; for l2 0.0001
+    finalLayerWeights.regularize_L1(lambda);
+  }
+  if(reg ==2)
+  {
+    VecWrapper finalLayerWeights(weights, weights.size() - layers[layers.size() -1]->getWeightCount(),layers[layers.size() -1]->getWeightCount());
+    double lambda = 0.001;  //fro L2 0.001; for l2 0.0001
+   finalLayerWeights*=(1-lambda);
+  }
+
+
 
 }
 
@@ -262,16 +324,16 @@ void NeuralNet::centralFiniteDifferencing(Vec& x, Vec& target)
     if((gradientCFD[i] - gradient[i]) / gradientCFD[i] > 0.005)
       count++;
   }
-  cout << "Gradtients with central finite differencing: " << endl;
-  gradientCFD.print();
-  cout << endl;
-  cout << "Gradtients with backprop: " << endl;
-  gradient.print();
-  cout << endl;
-   cout << endl;
-    cout << endl;
-  cout << "Amount of times when the difference between backprop and central finite differencing is more than 0.5%: " << count << " / " << gradient.size() << endl;
-  cout << "The 10 can be accounted but the fact that they are the biases and my finite differencing test does not treat them any differently." << endl;
+  // cout << "Gradtients with central finite differencing: " << endl;
+  // gradientCFD.print();
+  // cout << endl;
+  // cout << "Gradtients with backprop: " << endl;
+  // gradient.print();
+  // cout << endl;
+  //  cout << endl;
+  //   cout << endl;
+  // cout << "Amount of times when the difference between backprop and central finite differencing is more than 0.5%: " << count << " / " << gradient.size() << endl;
+  // cout << "The 10 can be accounted but the fact that they are the biases and my finite differencing test does not treat them any differently." << endl;
 
 
 }
